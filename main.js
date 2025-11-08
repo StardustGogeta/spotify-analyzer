@@ -7,6 +7,7 @@ function submit()
     var files = document.getElementById("files").files;
     var songs = {};
     var counter = 0;
+    var total_ms = 0;
 
     files = Array.from(files).filter(file => file.name.endsWith(".json") && file.name.includes("Audio"));
 
@@ -18,6 +19,7 @@ function submit()
             sorted.slice(0, 100).forEach((e, i) => {
                 console.log([i + 1, e.name, e.album, e.plays]);
             });
+            console.log("ms_played", total_ms);
         }
     }
 
@@ -27,9 +29,10 @@ function submit()
         {
             var j = JSON.parse(evt.target.result);
             j.forEach(song => {
-                if (song["ms_played"] > MS_THRESHOLD)
+                if (FILTER_YEAR == 0 || song["ts"].startsWith(FILTER_YEAR.toString()))
                 {
-                    if (FILTER_YEAR == 0 || song["ts"].startsWith(FILTER_YEAR.toString()))
+                    total_ms += song["ms_played"];
+                    if (song["ms_played"] > MS_THRESHOLD)
                     {
                         var id = song["spotify_track_uri"];
                         var name = song["master_metadata_track_name"];
