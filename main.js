@@ -1,6 +1,16 @@
 
 var MS_THRESHOLD = 20000;
-var FILTER_YEAR = 2025;
+var FILTER_YEAR = 0;
+
+function truncateLabel(text, maxLength) {
+  text.each(function() {
+    let gameName = d3.select(this).text();
+    if (gameName.length > maxLength) {
+      gameName = gameName.slice(0, maxLength) + '...';
+    }
+    d3.select(this).text(gameName);
+  });
+}
 
 function displayData(songs, total_ms)
 {
@@ -48,13 +58,15 @@ function displayData(songs, total_ms)
     svg.append("g")
         .attr("transform", "translate(0," + height + ")")
         .call(d3.axisBottom(x))
-        .selectAll("text")
+    .selectAll("text")
         .attr("transform", "translate(-10,0)rotate(-45)")
         .style("text-anchor", "end");
 
     // y-axis
     svg.append("g")
-        .call(d3.axisLeft(y));
+        .call(d3.axisLeft(y))
+    .selectAll(".tick text")
+        .call(truncateLabel, 25);
 }
 
 
