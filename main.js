@@ -2,6 +2,62 @@
 var MS_THRESHOLD = 20000;
 var FILTER_YEAR = 2025;
 
+function displayData(songs, total_ms)
+{
+    var sorted = Object.values(songs).sort((a, b) => b["plays"] - a["plays"]);
+    sorted = sorted.slice(0, 20);
+
+    sorted.forEach((e, i) => {
+        console.log([i + 1, e.name, e.album, e.plays]);
+    });
+    console.log("ms_played", total_ms);
+    
+    const width = 1000;
+    const height = 700;
+    var margin = {top: 20, right: 20, bottom: 80, left: 200};
+    const x = d3.scaleLinear()
+        .domain([0, d3.max(sorted, d => d.plays)])
+        .range([0, width]);
+
+    const y = d3.scaleBand()
+        .domain(sorted.map(s => s.name))
+        .range([0, height])
+        .padding(0.1);
+
+    // Create the SVG container.
+    const svg = d3.select("#container")
+        .append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+            .attr("transform",
+                "translate(" + margin.left + "," + margin.top + ")");
+
+    // Bars
+    svg.append("g")
+        .attr("fill", "steelblue")
+        .selectAll()
+        .data(sorted)
+        .join("rect")
+        .attr("x", (d) => x(0))
+        .attr("y", (d) => y(d.name))
+        .attr("width", (d) => x(0) + x(d.plays))
+        .attr("height", y.bandwidth());
+
+    // x-axis
+    svg.append("g")
+        .attr("transform", "translate(0," + height + ")")
+        .call(d3.axisBottom(x))
+        .selectAll("text")
+        .attr("transform", "translate(-10,0)rotate(-45)")
+        .style("text-anchor", "end");
+
+    // y-axis
+    svg.append("g")
+        .call(d3.axisLeft(y));
+}
+
+
 function submit()
 {
     var files = document.getElementById("files").files;
@@ -15,11 +71,7 @@ function submit()
     {
         if (index == files.length)
         {
-            var sorted = Object.values(songs).sort((a, b) => b["plays"] - a["plays"]);
-            sorted.slice(0, 100).forEach((e, i) => {
-                console.log([i + 1, e.name, e.album, e.plays]);
-            });
-            console.log("ms_played", total_ms);
+            displayData(songs, total_ms);
         }
     }
 
