@@ -8,7 +8,7 @@ function displayData(songs, total_ms)
     sorted = sorted.slice(0, 20);
 
     sorted.forEach((e, i) => {
-        console.log([i + 1, e.name, e.album, e.plays]);
+        console.log([i + 1, e.title, e.album, e.plays]);
     });
     console.log("ms_played", total_ms);
     
@@ -17,6 +17,7 @@ function displayData(songs, total_ms)
     var margin = {top: 20, right: 20, bottom: 80, left: 200};
 
     var topPlays = Plot.plot({
+        title: "Top Songs by Number of Plays",
         marginLeft: margin.left,
         marginTop: margin.top,
         marginBottom: margin.bottom,
@@ -25,21 +26,31 @@ function displayData(songs, total_ms)
         height: height,
         x: {
             axis: "bottom",
+            label: "Times Played",
             grid: true
         },
         marks: [
-            Plot.axisY({lineWidth: 20}),
+            Plot.axisY({lineWidth: 20, label: "Song Title"}),
             Plot.ruleX([0]),
             Plot.barX(sorted, {
                 x: "plays",
-                y: "name",
+                y: "title",
                 sort: {y: "x", reverse: true},
                 fill: "steelblue",
-            })
+            }),
+            Plot.tip(sorted, Plot.pointerY({
+                x: "plays",
+                y: "title",
+                title: d => `${d.title} - ${d.artist}\n(${d.album})\n${d.plays} times played`,
+                sort: {y: "x", reverse: true},
+                lineWidth: 50,
+            })),
         ],
     })
 
-    document.querySelector("#container").append(topPlays);
+    var container = document.querySelector("#container");
+    container.innerHTML = "";
+    container.append(topPlays);
 }
 
 
@@ -60,26 +71,31 @@ function submit()
         }
     }
 
+    var filterYear = document.querySelector("#filter-year").value;
+    console.log("Filtering to year " + filterYear);
+
     files.forEach(file => {
         var reader = new FileReader();
         reader.onload = function(evt)
         {
             var j = JSON.parse(evt.target.result);
             j.forEach(song => {
-                if (FILTER_YEAR == 0 || song["ts"].startsWith(FILTER_YEAR.toString()))
+                if (filterYear == 0 || song["ts"].startsWith(filterYear.toString()))
                 {
                     total_ms += song["ms_played"];
                     if (song["ms_played"] > MS_THRESHOLD)
                     {
                         var id = song["spotify_track_uri"];
-                        var name = song["master_metadata_track_name"];
+                        var title = song["master_metadata_track_name"];
                         var album = song["master_metadata_album_album_name"];
+                        var artist = song["master_metadata_album_artist_name"];
                         if (songs[id]) {
                             songs[id]["plays"]++;
                         } else {
                             songs[id] = {
-                                "name": name,
+                                "title": title,
                                 "album": album,
+                                "artist": artist,
                                 "plays": 1
                             };
                         }
